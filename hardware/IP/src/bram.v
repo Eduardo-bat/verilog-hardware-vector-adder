@@ -17,7 +17,6 @@ module bram #(
         output reg 	[PORT_WIDTH-1:0] 	output_data_b
 	);
 	
-   
     (* RAM_STYLE="BLOCK" *)
     reg [PORT_WIDTH-1:0] ram [2**RAM_ADDR_BITS-1:0];
     

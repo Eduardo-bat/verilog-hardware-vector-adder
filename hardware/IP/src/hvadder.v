@@ -1,9 +1,4 @@
-`default_nettype none
 module	hvadder #(
-		//
-		// Size of the AXI-lite bus.  These are fixed, since 1) AXI-lite
-		// is fixed at a width of 32-bits by Xilinx def'n, and 2) since
-		// we only ever have 4 configuration words.
 		localparam C_AXI_DATA_WIDTH = 32,
 		parameter  C_AXI_ADDR_WIDTH = 14,
 		
@@ -12,48 +7,43 @@ module	hvadder #(
 	) (
 		input	wire								S_AXI_ACLK,
 		input	wire								S_AXI_ARESETN,
-		//
+		
 		input	wire								S_AXI_AWVALID,
 		output	wire								S_AXI_AWREADY,
 		input	wire	[  C_AXI_ADDR_WIDTH-1:0]	S_AXI_AWADDR,
 		input	wire	[					2:0]	S_AXI_AWPROT,
-		//
+		
 		input	wire								S_AXI_WVALID,
 		output	wire								S_AXI_WREADY,
 		input	wire	[  C_AXI_DATA_WIDTH-1:0]	S_AXI_WDATA,
 		input	wire	[C_AXI_DATA_WIDTH/8-1:0]	S_AXI_WSTRB,
-		//
+		
 		output	wire								S_AXI_BVALID,
 		input	wire								S_AXI_BREADY,
 		output	wire	[					1:0]	S_AXI_BRESP,
-		//
+		
 		input	wire								S_AXI_ARVALID,
 		output	wire								S_AXI_ARREADY,
 		input	wire	[  C_AXI_ADDR_WIDTH-1:0]	S_AXI_ARADDR,
 		input	wire	[					2:0]	S_AXI_ARPROT,
-		//
+		
 		output	wire								S_AXI_RVALID,
 		input	wire								S_AXI_RREADY,
 		output	wire	[  C_AXI_DATA_WIDTH-1:0]	S_AXI_RDATA,
 		output	wire	[					1:0]	S_AXI_RRESP
 	);
 
-	////////////////////////////////////////////////////////////////////////
-	//
-	// Register/wire signal declarations
-	////////////////////////////////////////////////////////////////////////
-	//
 	localparam	ADDRLSB = $clog2(C_AXI_DATA_WIDTH)-3;
 
 	wire	i_reset = !S_AXI_ARESETN;
 
 	wire									axil_write_ready;
 	wire	[C_AXI_ADDR_WIDTH-ADDRLSB-1:0]	awskd_addr;
-	//
+	
 	wire	[		 C_AXI_DATA_WIDTH-1:0]	wskd_data;
 	wire 	[	   C_AXI_DATA_WIDTH/8-1:0]	wskd_strb;
 	reg										axil_bvalid;
-	//
+	
 	wire									axil_read_ready;
 	wire	[C_AXI_ADDR_WIDTH-ADDRLSB-1:0]	arskd_addr;
 	reg	    [		 C_AXI_DATA_WIDTH-1:0]	axil_read_data;
@@ -66,12 +56,6 @@ module	hvadder #(
 	wire	[C_AXI_DATA_WIDTH-1:0] wskd_op_reg,         wskd_addr_reg,      wskd_status_reg,    wskd_data_read_reg,
 	                               wskd_data_write_reg, wskd_veca_addr_reg, wskd_vecb_addr_reg, wskd_vecr_addr_reg,
 	                               wskd_vec_len_reg;
-	                               
-	////////////////////////////////////////////////////////////////////////
-	//
-	// AXI-lite signaling
-	//
-	////////////////////////////////////////////////////////////////////////
 
 	generate begin : SKIDBUFFER_WRITE
 		wire	awskd_valid, wskd_valid;
@@ -79,7 +63,7 @@ module	hvadder #(
 		skidbuffer #(.OPT_OUTREG(0),
 					.OPT_LOWPOWER(0),
 					.DW(C_AXI_ADDR_WIDTH-ADDRLSB))
-		axilawskid(//
+		axilawskid(
 					.i_clk(S_AXI_ACLK), .i_reset(i_reset),
 					.i_valid(S_AXI_AWVALID), .o_ready(S_AXI_AWREADY),
 					.i_data(S_AXI_AWADDR[C_AXI_ADDR_WIDTH-1:ADDRLSB]),
@@ -89,7 +73,7 @@ module	hvadder #(
 		skidbuffer #(.OPT_OUTREG(0),
 					.OPT_LOWPOWER(0),
 					.DW(C_AXI_DATA_WIDTH+C_AXI_DATA_WIDTH/8))
-		axilwskid(//
+		axilwskid(
 					.i_clk(S_AXI_ACLK), .i_reset(i_reset),
 					.i_valid(S_AXI_WVALID), .o_ready(S_AXI_WREADY),
 					.i_data({ S_AXI_WDATA, S_AXI_WSTRB }),
@@ -118,7 +102,7 @@ module	hvadder #(
 		skidbuffer #(.OPT_OUTREG(0),
 					.OPT_LOWPOWER(0),
 					.DW(C_AXI_ADDR_WIDTH-ADDRLSB))
-		axilarskid(//
+		axilarskid(
 					.i_clk(S_AXI_ACLK), .i_reset(i_reset),
 					.i_valid(S_AXI_ARVALID), .o_ready(S_AXI_ARREADY),
 					.i_data(S_AXI_ARADDR[C_AXI_ADDR_WIDTH-1:ADDRLSB]),
@@ -141,8 +125,7 @@ module	hvadder #(
 	assign	S_AXI_RVALID = axil_read_valid;
 	assign	S_AXI_RDATA  = axil_read_data;
 	assign	S_AXI_RRESP = 2'b00;
-
-	// apply_wstrb(old_data, new_data, write_strobes)
+	
 	assign	wskd_op_reg         = apply_wstrb(op_reg,         wskd_data, wskd_strb);
 	assign	wskd_addr_reg       = apply_wstrb(addr_reg,       wskd_data, wskd_strb);
 	assign	wskd_status_reg     = apply_wstrb(status_reg,     wskd_data, wskd_strb);
@@ -165,11 +148,15 @@ module	hvadder #(
 	
 	always @(posedge S_AXI_ACLK) begin
         if (i_reset) begin
-            op_reg <= 0;
-            addr_reg <= 0;
-         // status_reg <= 0;
-         // data_read_reg <= 0;
+            op_reg		   <= 0;
+            addr_reg	   <= 0;
+         // status_reg	   <= 0;
+         // data_read_reg  <= 0;
             data_write_reg <= 0;
+            veca_addr_reg  <= 0;
+            vecb_addr_reg  <= 0;
+            vecr_addr_reg  <= 0;
+            vec_len_reg    <= 0;
         end else if (axil_write_ready) begin
             case (awskd_addr)
             4'b0000: op_reg         <= wskd_op_reg;
@@ -216,15 +203,11 @@ module	hvadder #(
 		
 	endfunction
 
-	// Make Verilator happy
-	// Verilator lint_off UNUSED
 	wire	unused;
 	assign	unused = &{ 1'b0, S_AXI_AWPROT, S_AXI_ARPROT,
 			S_AXI_ARADDR[ADDRLSB-1:0],
 			S_AXI_AWADDR[ADDRLSB-1:0] };
-	// Verilator lint_on  UNUSED
 
-	//////////////////////////////////////////////////////////////////////////////////////
 
 	localparam integer wait_state = 0, read_state = 1, write_state = 2, done_state = 3,
 	                   add_read_state = 4, add_write_state = 5;
@@ -334,4 +317,3 @@ module	hvadder #(
     endfunction
 
 endmodule
-`default_nettype wire
